@@ -18,6 +18,8 @@ if 'show_event_details' not in st.session_state:
     st.session_state.show_event_details = None
 if 'timers' not in st.session_state:
     st.session_state.timers = {}
+if 'fullscreen_timer' not in st.session_state:
+    st.session_state.fullscreen_timer = None
 
 # Function to create a new event
 def create_event(event_name, event_date, categories):
@@ -165,15 +167,16 @@ with tab3:
 
             timer = st.session_state.timers[category]
             if timer['running']:
-                timer['elapsed_time'] += 1
-                time.sleep(1)
+                timer['elapsed_time'] += time.time() - st.session_state.last_update
+                st.session_state.last_update = time.time()
 
-            col1, col2, col3 = st.columns([1, 1, 1])
+            col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
             with col1:
                 if st.button("Start", key=f"start_{category}"):
                     if not timer['running']:
                         timer['start_time'] = datetime.now() - timedelta(seconds=timer['elapsed_time'])
                         timer['running'] = True
+                        st.session_state.last_update = time.time()
             with col2:
                 if st.button("Pause", key=f"pause_{category}"):
                     if timer['running']:
@@ -185,5 +188,24 @@ with tab3:
                         timer['elapsed_time'] = (datetime.now() - timer['start_time']).total_seconds()
                         timer['running'] = False
                         st.session_state.timers[category] = {'start_time': None, 'elapsed_time': 0, 'running': False}
+            with col4:
+                if st.button("Fullscreen", key=f"fullscreen_{category}"):
+                    st.session_state.fullscreen_timer = category
 
-            st.write(f"Elapsed Time: {int(timer['elapsed_time'] // 3600)}:{int((timer['elapsed_time'] % 3600) // 60)}:{int(timer['elapsed_time'] % 60)}")
+            elapsed_time = timer['elapsed_time']
+            hours, remainder = divmod(elapsed_time, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            milliseconds = int((elapsed_time - int(elapsed_time)) * 1000)
+            st.write(f"Elapsed Time: {int(hours)}:{int(minutes)}:{int(seconds)}.{milliseconds:03d}")
+
+        if st.session_state.fullscreen_timer:
+            category = st.session_state.fullscreen_timer
+            timer = st.session_state.timers[category]
+            elapsed_time = timer['elapsed_time']
+            hours, remainder = divmod(elapsed_time, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            milliseconds = int((elapsed_time - int(elapsed_time)) * 1000)
+            st.write(f"# Fullscreen Timer: {category}")
+            st.write(f"## {int(hours)}:{int(minutes)}:{int(seconds)}.{milliseconds:03d}")
+            if st.button("Exit Fullscreen"):
+                st.session_state.fullscreen_timer = None
