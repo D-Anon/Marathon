@@ -78,7 +78,6 @@ with tab1:
             with col2:
                 if st.button("Cancel"):
                     st.session_state.show_event_modal = False  # Close the modal without saving
-                    st.experimental_rerun()  # Rerun to collapse the expander
 
     # List all events
     if st.session_state.events:
