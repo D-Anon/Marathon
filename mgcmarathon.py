@@ -13,6 +13,8 @@ if 'show_event_modal' not in st.session_state:
     st.session_state.show_event_modal = False
 if 'edit_mode' not in st.session_state:
     st.session_state.edit_mode = False
+if 'show_event_details' not in st.session_state:
+    st.session_state.show_event_details = None
 
 # Function to create a new event
 def create_event(event_name, event_date, categories):
@@ -36,6 +38,7 @@ def delete_event(event_name):
     if event_name in st.session_state.events:
         del st.session_state.events[event_name]
         st.session_state.current_event = None
+        st.session_state.show_event_details = None
 
 # Function to record gun start time for a category
 def record_gun_start_time(category, time):
@@ -106,19 +109,27 @@ with tab1:
         for event_name, event_details in st.session_state.events.items():
             event_date = event_details['date']
             label = "Ongoing" if event_date == today else "Upcoming"
-            with st.container(border=True):
-                st.write(f"**{event_name}** - {event_date} ({label})")
-                col1, col2, col3 = st.columns([1, 1, 1])
+            if st.button(f"{event_name} - {event_date} ({label})", key=f"event_{event_name}"):
+                st.session_state.show_event_details = event_name
+
+        # Show event details
+        if st.session_state.show_event_details:
+            event_name = st.session_state.show_event_details
+            event_details = st.session_state.events[event_name]
+            with st.expander(f"Event Details: {event_name}", expanded=True):
+                st.write(f"**Event Name:** {event_name}")
+                st.write(f"**Event Date:** {event_details['date']}")
+                st.write("**Categories and Cut-Off Times:**")
+                for category, cut_off_time in event_details['categories'].items():
+                    st.write(f"- {category}: {cut_off_time} minutes")
+
+                col1, col2 = st.columns([1, 1])
                 with col1:
-                    if st.button("Select", key=f"select_{event_name}"):
-                        st.session_state.current_event = event_name
-                        st.success(f"Event '{event_name}' selected!")
-                with col2:
-                    if st.button("Edit", key=f"edit_{event_name}"):
+                    if st.button("Edit Event", key=f"edit_{event_name}"):
                         st.session_state.show_event_modal = True
                         st.session_state.edit_mode = True
-                with col3:
-                    if st.button("Delete", key=f"delete_{event_name}"):
+                with col2:
+                    if st.button("Delete Event", key=f"delete_{event_name}"):
                         delete_event(event_name)
                         st.success(f"Event '{event_name}' deleted!")
     else:
