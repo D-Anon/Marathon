@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
+import time
 
 # Initialize session state to store event details and recorded times
 if 'events' not in st.session_state:
@@ -15,6 +16,8 @@ if 'edit_mode' not in st.session_state:
     st.session_state.edit_mode = False
 if 'show_event_details' not in st.session_state:
     st.session_state.show_event_details = None
+if 'timers' not in st.session_state:
+    st.session_state.timers = {}
 
 # Function to create a new event
 def create_event(event_name, event_date, categories):
@@ -61,7 +64,7 @@ def record_bib_time(bib_number, category):
 # Streamlit UI with tabs
 st.title("Marathon Time Recorder")
 
-tab1, tab2 = st.tabs(["Events", "Records"])
+tab1, tab2, tab3 = st.tabs(["Events", "Records", "Timer"])
 
 with tab1:
     st.header("Events")
@@ -142,3 +145,45 @@ with tab2:
         st.write(st.session_state.recorded_times[st.session_state.recorded_times['Event'] == st.session_state.current_event])
     else:
         st.write("No event selected. Please create or select an event to view records.")
+
+with tab3:
+    st.header("Timer")
+    today = datetime.today().date()
+
+    # Dropdown to select an ongoing event
+    ongoing_events = [event for event, details in st.session_state.events.items() if details['date'] == today]
+    selected_event = st.selectbox("Select Ongoing Event", options=ongoing_events)
+
+    if selected_event:
+        st.session_state.current_event = selected_event
+        categories = st.session_state.events[selected_event]['categories'].keys()
+
+        for category in categories:
+            st.write(f"**Category:** {category}")
+            if category not in st.session_state.timers:
+                st.session_state.timers[category] = {'start_time': None, 'elapsed_time': 0, 'running': False}
+
+            timer = st.session_state.timers[category]
+            if timer['running']:
+                timer['elapsed_time'] += 1
+                time.sleep(1)
+
+            col1, col2, col3 = st.columns([1, 1, 1])
+            with col1:
+                if st.button("Start", key=f"start_{category}"):
+                    if not timer['running']:
+                        timer['start_time'] = datetime.now() - timedelta(seconds=timer['elapsed_time'])
+                        timer['running'] = True
+            with col2:
+                if st.button("Pause", key=f"pause_{category}"):
+                    if timer['running']:
+                        timer['elapsed_time'] = (datetime.now() - timer['start_time']).total_seconds()
+                        timer['running'] = False
+            with col3:
+                if st.button("Stop", key=f"stop_{category}"):
+                    if timer['running']:
+                        timer['elapsed_time'] = (datetime.now() - timer['start_time']).total_seconds()
+                        timer['running'] = False
+                        st.session_state.timers[category] = {'start_time': None, 'elapsed_time': 0, 'running': False}
+
+            st.write(f"Elapsed Time: {int(timer['elapsed_time'] // 3600)}:{int((timer['elapsed_time'] % 3600) // 60)}:{int(timer['elapsed_time'] % 60)}")
