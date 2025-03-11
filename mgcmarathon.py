@@ -60,6 +60,7 @@ with tab1:
     # Event creation modal using expander
     if st.session_state.get('show_event_modal', False):
         with st.expander("Enter Event Details", expanded=True):
+            st.markdown("### New Event")
             event_name = st.text_input("Enter Event Name:", key="new_event_name")
             event_date = st.date_input("Enter Event Date:", datetime.today(), key="new_event_date")
             if st.button("Save Event"):
@@ -100,3 +101,4 @@ with tab2:
         st.write(st.session_state.recorded_times[st.session_state.recorded_times['Event'] == st.session_state.current_event])
     else:
         st.write("No event selected. Please create or select an event to view records.")
+6
