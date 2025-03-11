@@ -66,10 +66,16 @@ with tab1:
                 cut_off_time = st.number_input(f"Cut-Off Time for {category} (in minutes):", min_value=0, key=f"cut_off_{i}")
                 categories[category] = cut_off_time
 
-            if st.button("Save Event"):
-                create_event(event_name, event_date, categories)
-                st.success(f"Event '{event_name}' created for {event_date} with categories!")
-                st.session_state.show_event_modal = False  # Close the modal
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                if st.button("Save Event"):
+                    create_event(event_name, event_date, categories)
+                    st.success(f"Event '{event_name}' created for {event_date} with categories!")
+                    st.session_state.show_event_modal = False  # Close the modal
+
+            with col2:
+                if st.button("Cancel"):
+                    st.session_state.show_event_modal = False  # Close the modal without saving
 
     # List all events
     if st.session_state.events:
