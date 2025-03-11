@@ -11,8 +11,13 @@ if 'recorded_times' not in st.session_state:
     st.session_state.recorded_times = pd.DataFrame(columns=['Event', 'Bib Number', 'Category', 'Recorded Time'])
 
 # Function to create a new event
-def create_event(event_name):
-    st.session_state.events[event_name] = {'categories': {}, 'gun_start_times': {}, 'cut_off_times': {}}
+def create_event(event_name, event_date):
+    st.session_state.events[event_name] = {
+        'date': event_date,
+        'categories': {},
+        'gun_start_times': {},
+        'cut_off_times': {}
+    }
     st.session_state.current_event = event_name
 
 # Function to add categories to the current event
@@ -42,24 +47,21 @@ def record_bib_time(bib_number, category):
 # Streamlit UI with tabs
 st.title("Marathon Time Recorder")
 
-tab1, tab2, tab3, tab4 = st.tabs(["Ongoing Time", "Records", "Add Event", "Event List"])
+tab1, tab2, tab3 = st.tabs(["Events", "Records", "Add Event"])
 
 with tab1:
-    st.header("Ongoing Time")
-    if st.session_state.current_event:
-        st.write(f"Current Event: {st.session_state.current_event}")
-        selected_category = st.selectbox("Select Category for Gun Start Time:", options=list(st.session_state.events[st.session_state.current_event]['categories'].keys()))
-        gun_start_time = st.time_input("Enter Gun Start Time:", datetime.now().time())
-        if st.button("Record Gun Start Time"):
-            record_gun_start_time(selected_category, datetime.combine(datetime.today(), gun_start_time))
-            st.success(f"Gun start time recorded for '{selected_category}'!")
-
-        bib_number = st.text_input("Enter Race Bib Number:")
-        if st.button("Record Bib Time"):
-            record_bib_time(bib_number, selected_category)
-            st.success(f"Time recorded for bib number '{bib_number}'!")
+    st.header("Events")
+    today = datetime.today().date()
+    if st.session_state.events:
+        for event_name, event_details in st.session_state.events.items():
+            event_date = event_details['date']
+            label = "Ongoing" if event_date == today else "Upcoming"
+            st.write(f"{event_name} - {event_date} ({label})")
+            if st.button(f"Select {event_name}", key=f"select_{event_name}"):
+                st.session_state.current_event = event_name
+                st.success(f"Event '{event_name}' selected!")
     else:
-        st.write("No ongoing event. Please create or select an event.")
+        st.write("No events created yet. Please create an event.")
 
 with tab2:
     st.header("Records")
@@ -72,9 +74,10 @@ with tab2:
 with tab3:
     st.header("Add Event")
     event_name = st.text_input("Enter Event Name:")
+    event_date = st.date_input("Enter Event Date:", datetime.today())
     if st.button("Create Event"):
-        create_event(event_name)
-        st.success(f"Event '{event_name}' created!")
+        create_event(event_name, event_date)
+        st.success(f"Event '{event_name}' created for {event_date}!")
 
     if st.session_state.current_event:
         st.write("Add Categories:")
@@ -88,13 +91,3 @@ with tab3:
         if st.button("Add Categories"):
             add_categories(categories)
             st.success("Categories added successfully!")
-
-with tab4:
-    st.header("Event List")
-    if st.session_state.events:
-        selected_event = st.selectbox("Select Event:", options=list(st.session_state.events.keys()))
-        if st.button("Select Event"):
-            st.session_state.current_event = selected_event
-            st.success(f"Event '{selected_event}' selected!")
-    else:
-        st.write("No events created yet. Please create an event.")
