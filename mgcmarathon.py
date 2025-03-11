@@ -47,11 +47,21 @@ def record_bib_time(bib_number, category):
 # Streamlit UI with tabs
 st.title("Marathon Time Recorder")
 
-tab1, tab2, tab3 = st.tabs(["Events", "Records", "Add Event"])
+tab1, tab2 = st.tabs(["Events", "Records"])
 
 with tab1:
     st.header("Events")
     today = datetime.today().date()
+
+    # Event creation form
+    with st.expander("Create New Event"):
+        event_name = st.text_input("Enter Event Name:", key="new_event_name")
+        event_date = st.date_input("Enter Event Date:", datetime.today(), key="new_event_date")
+        if st.button("Create Event"):
+            create_event(event_name, event_date)
+            st.success(f"Event '{event_name}' created for {event_date}!")
+
+    # List all events
     if st.session_state.events:
         for event_name, event_details in st.session_state.events.items():
             event_date = event_details['date']
@@ -60,6 +70,20 @@ with tab1:
             if st.button(f"Select {event_name}", key=f"select_{event_name}"):
                 st.session_state.current_event = event_name
                 st.success(f"Event '{event_name}' selected!")
+
+            # Manage categories for the selected event
+            if st.session_state.current_event == event_name:
+                st.write("Add Categories:")
+                num_categories = st.number_input("Number of Categories:", min_value=1, value=1, key=f"num_categories_{event_name}")
+                categories = {}
+                for i in range(num_categories):
+                    category = st.text_input(f"Category {i+1} Name (e.g., 5k, 10k):", key=f"category_{i}_{event_name}")
+                    cut_off_time = st.number_input(f"Cut-Off Time for {category} (in minutes):", min_value=0, key=f"cut_off_{i}_{event_name}")
+                    categories[category] = cut_off_time
+
+                if st.button("Add Categories", key=f"add_categories_{event_name}"):
+                    add_categories(categories)
+                    st.success("Categories added successfully!")
     else:
         st.write("No events created yet. Please create an event.")
 
@@ -70,24 +94,3 @@ with tab2:
         st.write(st.session_state.recorded_times[st.session_state.recorded_times['Event'] == st.session_state.current_event])
     else:
         st.write("No event selected. Please create or select an event to view records.")
-
-with tab3:
-    st.header("Add Event")
-    event_name = st.text_input("Enter Event Name:")
-    event_date = st.date_input("Enter Event Date:", datetime.today())
-    if st.button("Create Event"):
-        create_event(event_name, event_date)
-        st.success(f"Event '{event_name}' created for {event_date}!")
-
-    if st.session_state.current_event:
-        st.write("Add Categories:")
-        num_categories = st.number_input("Number of Categories:", min_value=1, value=1)
-        categories = {}
-        for i in range(num_categories):
-            category = st.text_input(f"Category {i+1} Name (e.g., 5k, 10k):", key=f"category_{i}")
-            cut_off_time = st.number_input(f"Cut-Off Time for {category} (in minutes):", min_value=0, key=f"cut_off_{i}")
-            categories[category] = cut_off_time
-
-        if st.button("Add Categories"):
-            add_categories(categories)
-            st.success("Categories added successfully!")
