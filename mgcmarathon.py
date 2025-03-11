@@ -9,6 +9,8 @@ if 'current_event' not in st.session_state:
     st.session_state.current_event = None
 if 'recorded_times' not in st.session_state:
     st.session_state.recorded_times = pd.DataFrame(columns=['Event', 'Bib Number', 'Category', 'Recorded Time'])
+if 'show_event_modal' not in st.session_state:
+    st.session_state.show_event_modal = False
 
 # Function to create a new event
 def create_event(event_name, event_date, categories):
@@ -52,7 +54,7 @@ with tab1:
         st.session_state.show_event_modal = True
 
     # Event creation modal using expander
-    if st.session_state.get('show_event_modal', False):
+    if st.session_state.show_event_modal:
         with st.expander("Enter Event Details", expanded=True):
             st.markdown("### New Event")
             event_name = st.text_input("Enter Event Name:", key="new_event_name")
