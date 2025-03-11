@@ -190,7 +190,9 @@ with tab3:
                         st.session_state.timers[category] = {'start_time': None, 'elapsed_time': 0, 'running': False}
             with col4:
                 if st.button("Fullscreen", key=f"fullscreen_{category}"):
+                    # When fullscreen button is pressed, simulate opening a new page
                     st.session_state.fullscreen_timer = category
+                    st.experimental_set_query_params(fullscreen=True)
 
             elapsed_time = timer['elapsed_time']
             hours, remainder = divmod(elapsed_time, 3600)
@@ -198,14 +200,18 @@ with tab3:
             milliseconds = int((elapsed_time - int(elapsed_time)) * 1000)
             st.write(f"Elapsed Time: {int(hours)}:{int(minutes)}:{int(seconds)}.{milliseconds:03d}")
 
-        if st.session_state.fullscreen_timer:
+        # Handle fullscreen view
+        fullscreen = st.experimental_get_query_params().get('fullscreen', [None])[0]
+        if fullscreen and st.session_state.fullscreen_timer:
             category = st.session_state.fullscreen_timer
             timer = st.session_state.timers[category]
             elapsed_time = timer['elapsed_time']
             hours, remainder = divmod(elapsed_time, 3600)
             minutes, seconds = divmod(remainder, 60)
             milliseconds = int((elapsed_time - int(elapsed_time)) * 1000)
+            
             st.write(f"# Fullscreen Timer: {category}")
             st.write(f"## {int(hours)}:{int(minutes)}:{int(seconds)}.{milliseconds:03d}")
             if st.button("Exit Fullscreen"):
+                st.experimental_set_query_params()  # Reset the URL query params
                 st.session_state.fullscreen_timer = None
