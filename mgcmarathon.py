@@ -15,10 +15,11 @@ def create_event(event_name):
     st.session_state.events[event_name] = {'categories': {}, 'gun_start_times': {}, 'cut_off_times': {}}
     st.session_state.current_event = event_name
 
-# Function to add a category to the current event
-def add_category(category, cut_off_time):
+# Function to add categories to the current event
+def add_categories(categories):
     if st.session_state.current_event:
-        st.session_state.events[st.session_state.current_event]['categories'][category] = cut_off_time
+        for category, cut_off_time in categories.items():
+            st.session_state.events[st.session_state.current_event]['categories'][category] = cut_off_time
 
 # Function to record gun start time for a category
 def record_gun_start_time(category, time):
@@ -76,11 +77,17 @@ with tab3:
         st.success(f"Event '{event_name}' created!")
 
     if st.session_state.current_event:
-        category = st.text_input("Enter Category (e.g., 5k, 10k):")
-        cut_off_time = st.number_input("Enter Cut-Off Time (in minutes):", min_value=0)
-        if st.button("Add Category"):
-            add_category(category, cut_off_time)
-            st.success(f"Category '{category}' added with cut-off time {cut_off_time} minutes!")
+        st.write("Add Categories:")
+        num_categories = st.number_input("Number of Categories:", min_value=1, value=1)
+        categories = {}
+        for i in range(num_categories):
+            category = st.text_input(f"Category {i+1} Name (e.g., 5k, 10k):", key=f"category_{i}")
+            cut_off_time = st.number_input(f"Cut-Off Time for {category} (in minutes):", min_value=0, key=f"cut_off_{i}")
+            categories[category] = cut_off_time
+
+        if st.button("Add Categories"):
+            add_categories(categories)
+            st.success("Categories added successfully!")
 
 with tab4:
     st.header("Event List")
